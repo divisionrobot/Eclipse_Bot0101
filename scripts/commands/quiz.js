@@ -2,100 +2,107 @@ const axios = require("axios");
 
 module.exports.config = {
   name: "quiz",
-  version: "2.0.0",
+  version: "3.0.0",
   permission: 0,
-  credits: "Developer",
-  description: "API থেকে কুইজ প্রশ্ন পান এবং আপনার জ্ঞান পরীক্ষা করুন",
+  credits: "R.I Fixed Version",
+  description: "Working quiz game (fixed API)",
   prefix: false,
-  premium: false,
-  category: "ধাঁধার খেলা",
-  usages: "quiz [guide]",
-  cooldowns: 5,
-  dependencies: {
-    "axios": ""
-  }
+  category: "game",
+  usages: "quiz",
+  cooldowns: 5
 };
 
-const timeoutDuration = 30 * 1000; // ৩০ সেকেন্ড
+const timeoutDuration = 30 * 1000;
 
-module.exports.run = async function ({ api, event, args }) {
+module.exports.run = async function ({ api, event }) {
   const { threadID, senderID, messageID } = event;
 
-  if (args[0]?.toLowerCase() === "guide") {
-    return api.sendMessage(
-      `🧠 | কুইজ খেলার গাইড ✨\n\n` +
-      `➤ কমান্ড: quiz\n` +
-      `➤ API থেকে এলোমেলো কুইজ প্রশ্ন পাবেন।\n` +
-      `➤ ৪টি অপশন থেকে সঠিক উত্তরটি নির্বাচন করুন (0-3 লিখুন)।\n` +
-      `➤ ৩০ সেকেন্ডের মধ্যে উত্তর দিন!\n` +
-      `➤ ভুল হলে আবার চেষ্টা করুন!\n\n` +
-      `⚡ শুভকামনা!`, 
-      threadID, 
-      messageID
-    );
-  }
-
   try {
-    const res = await axios.get("https://masterapi.fun/api/quiz");
-    const item = res.data;
+    // ✅ Stable API (Open Trivia DB)
+    const res = await axios.get(
+      "https://opentdb.com/api.php?amount=1&type=multiple"
+    );
 
-    if (!item.question || !item.options || item.answer === undefined) {
-      throw new Error("Invalid quiz data");
-    }
+    const data = res.data.results[0];
 
-    const correctAnswerText = item.options[item.answer];
-    const optionsList = item.options.map((opt, index) => `${index}. ${opt}`).join("\n");
+    const question = data.question;
+    const correct = data.correct_answer;
+    const incorrect = data.incorrect_answers;
 
-    const quizMsg = `📝 প্রশ্ন: ${item.question}\nবিভাগ: ${item.category}\nস্তর: ${item.difficulty}\n\n${optionsList}\n\n💡 ইঙ্গিত: ${item.hint}\n\n✏️ উত্তর দিতে 0 থেকে 3 নম্বর লিখুন!\n⏳ সময়: ৩০ সেকেন্ড!`;
+    // shuffle options
+    const options = [...incorrect, correct].sort(() => Math.random() - 0.5);
 
-    return api.sendMessage(quizMsg, threadID, async (err, info) => {
+    const correctIndex = options.indexOf(correct);
+
+    let msg =
+      `🧠 QUIZ TIME!\n\n` +
+      `❓ ${question}\n\n`;
+
+    options.forEach((opt, i) => {
+      msg += `${i}. ${opt}\n`;
+    });
+
+    msg += `\n⏳ 30 seconds! Reply 0-3`;
+
+    return api.sendMessage(msg, threadID, (err, info) => {
       const timeout = setTimeout(() => {
-        try {
-          api.unsendMessage(info.messageID);
-          api.sendMessage(`⏰ | সময় শেষ! সঠিক উত্তর ছিল: ${correctAnswerText}`, threadID);
-        } catch (e) {
-          console.error("Timeout error:", e);
-        }
+        api.unsendMessage(info.messageID);
+        api.sendMessage(
+          `⏰ Time over!\n✅ Correct Answer: ${correct}`,
+          threadID
+        );
       }, timeoutDuration);
 
-      // Push to handleReply system
       global.client.handleReply.push({
         name: this.config.name,
         messageID: info.messageID,
         author: senderID,
-        answer: item.answer,
-        correctAnswer: correctAnswerText,
+        answer: correctIndex,
+        correctAnswer: correct,
         timeout
       });
     });
 
-  } catch (error) {
-    console.error("Quiz error:", error);
-    return api.sendMessage("❌ | কুইজ ডেটা লোড করতে সমস্যা হয়েছে!", threadID, messageID);
+  } catch (e) {
+    console.log(e);
+    return api.sendMessage(
+      "❌ Quiz load failed! Try again later.",
+      threadID,
+      messageID
+    );
   }
 };
 
 module.exports.handleReply = async function ({ api, event, handleReply }) {
-  const { threadID, senderID, messageID, body } = event;
+  const { threadID, senderID, body, messageID } = event;
 
   if (senderID !== handleReply.author) return;
 
   const userAnswer = parseInt(body.trim());
-  if (isNaN(userAnswer) || userAnswer < 0 || userAnswer > 3) {
-    return api.sendMessage("⚠️ | দয়া করে 0 থেকে 3 নম্বরের মধ্যে সঠিক উত্তর দিন!", threadID, messageID);
+
+  if (isNaN(userAnswer)) {
+    return api.sendMessage(
+      "⚠️ 0-3 এর মধ্যে উত্তর দাও!",
+      threadID,
+      messageID
+    );
   }
 
   clearTimeout(handleReply.timeout);
 
-  try {
-    await api.unsendMessage(handleReply.messageID);
-  } catch (e) {
-    console.error("Unsend error:", e);
-  }
+  api.unsendMessage(handleReply.messageID);
 
   if (userAnswer === handleReply.answer) {
-    return api.sendMessage(`✅ | সঠিক উত্তর! আপনি 天才ですね!`, threadID, messageID);
+    return api.sendMessage(
+      "✅ Correct Answer! 🎉",
+      threadID,
+      messageID
+    );
   } else {
-    return api.sendMessage(`❌ | ভুল উত্তর! সঠিক উত্তর ছিল: ${handleReply.correctAnswer}`, threadID, messageID);
+    return api.sendMessage(
+      `❌ Wrong!\n✔️ Correct: ${handleReply.correctAnswer}`,
+      threadID,
+      messageID
+    );
   }
 };
