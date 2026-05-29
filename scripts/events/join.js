@@ -109,8 +109,8 @@ You are the ${ordinalSuffix(memCount)} member of 『 ${threadName} 』
 
 🪄 𝗤𝘂𝗶𝗰𝗸 𝗜𝗻𝗳𝗼:
 • 𝗣𝗿𝗲𝗳𝗶𝘅: ⌈ ${prefix} ⌋  
-• 𝗗𝗲𝘃: Imran Ahmed  
-• 𝗠𝗼𝗼𝗱: Community vibes only ✨
+• 𝗗𝗲𝘃: Aether Vorn   
+• 𝗠𝗼𝗼𝗱: Community vibe only ✨
 
 💡 𝗧𝗶𝗽:  
 Active members = 💌 bonus stickers!  
