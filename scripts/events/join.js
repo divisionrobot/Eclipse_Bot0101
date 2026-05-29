@@ -56,10 +56,10 @@ ${prefix}random — video
 ❏━━━━━━━━━━━━━━━━━━━━━━━━━❏
 
 🚨 𝗖𝗢𝗡𝗧𝗔𝗖𝗧 𝗗𝗘𝗩𝗘𝗟𝗢𝗣𝗘𝗥 🚨
-👤 𝓓𝓮𝓿𝓮𝓵𝓸𝓹𝓮𝓻: 𝓘𝓶𝓻𝓪𝓷 𝓐𝓱𝓶𝓮𝓭
-📘 𝐅𝐚𝐜𝐞𝐛𝐨𝐨𝐤: https://www.facebook.com/Imran.Ahmed099
-💬 𝖂𝗵𝗮𝘁𝘀𝗔𝗽𝗽: wa.me/+8801689903267
-✉️ 𝑬𝒎𝒂𝒊𝒍: massangerbot2@gmail.com
+👤 𝓓𝓮𝓿𝓮𝓵𝓸𝓹𝓮𝓻: Aether Vorn.
+📘 𝐅𝐚𝐜𝐞𝐛𝐨𝐨𝐤: apadoto na nileo cholbe.
+💬 𝖂𝗵𝗮𝘁𝘀𝗔𝗽𝗽: Voter card sara sim dey na.
+✉️ 𝑬𝒎𝒂𝒊𝒍: Keu khule dey na.
 ❏━━━━━━━━━━━━━━━━━━━━━━━━━❏
 `;
       
