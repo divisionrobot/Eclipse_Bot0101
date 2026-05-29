@@ -1,125 +1,98 @@
-const fs = require("fs");
-const path = require("path");
-
-const file = path.join(__dirname, "bby-teach.json");
-
-// load data
-function load() {
-  if (!fs.existsSync(file)) return {};
-  return JSON.parse(fs.readFileSync(file));
-}
-
-// save data
-function save(data) {
-  fs.writeFileSync(file, JSON.stringify(data, null, 2));
-}
+const axios = require("axios");
+const baseApiUrl = "https://simsimi-fun.vercel.app";
 
 module.exports.config = {
   name: "bby",
-  version: "1.0.0",
+  version: "3.1.0",
   permission: 0,
-  prefix: false,
   credits: "IMRAN",
-  description: "Teach + chat bot with memory",
-  category: "ai"
+  description: "Cute AI bot with Simsimi API + online teach feature",
+  prefix: false,
+  premium: false,
+  category: "chat",
+  usages: "[your message]",
+  cooldowns: 0
 };
 
+const cuteReplies = [
+  "হ্যাঁ জানু 😘",
+  "বলো বাবু 💖",
+  "শুনছি জান 🥰",
+  "কি হইছে বলো তো? 😏"
+];
+
 module.exports.run = async ({ api, event, args }) => {
-  const { threadID, messageID } = event;
+  const { threadID, messageID, senderID } = event;
+  const input = args.join(" ").trim();
 
-  let data = load();
-  const input = args.join(" ");
-
-  // -------------------------
-  // bby ONLY REPLY
-  // -------------------------
-  if (!args[0]) {
-    const replies = [
-      "হ্যাঁ জানু 😘",
-      "বলো বাবু 💖",
-      "শুনছি জান 🥰",
-      "কি হইছে বলো তো? 😏"
-    ];
-
-    const reply = replies[Math.floor(Math.random() * replies.length)];
-    return api.sendMessage(reply, threadID, messageID);
+  // Just "imu"
+  if (!input) {
+    const reply = cuteReplies[Math.floor(Math.random() * cuteReplies.length)];
+    return api.sendMessage(reply, threadID, (err, info) => {
+      if (!err) global.client.handleReply.push({
+        name: module.exports.config.name,
+        messageID: info.messageID,
+        author: senderID
+      });
+    }, messageID);
   }
 
-  // -------------------------
-  // TEACH ADD
-  // -------------------------
-  if (args[0] === "teach") {
-    const text = input.replace("teach", "").trim();
-    const [ask, ans] = text.split("=").map(s => s.trim().toLowerCase());
+  // Teach mode
+  if (input.toLowerCase().startsWith("teach ")) {
+    const content = input.slice(6).trim();
+    const [ask, ans] = content.split("=").map(s => s.trim());
 
     if (!ask || !ans) {
-      return api.sendMessage("❌ Format: bby teach hi = hello", threadID, messageID);
+      return api.sendMessage("❌ সঠিক ফরম্যাট ব্যবহার করো:\nimu teach প্রশ্ন = উত্তর", threadID, messageID);
     }
 
-    if (!data[ask]) data[ask] = [];
-
-    data[ask].push(ans);
-    save(data);
-
-    return api.sendMessage(`✅ Saved:\n${ask} = ${ans}`, threadID, messageID);
+    try {
+      const teachURL = `${baseApiUrl}/teach?ask=${encodeURIComponent(ask)}&ans=${encodeURIComponent(ans)}`;
+      const res = await axios.get(teachURL);
+      if (res.data.data.ask && res.data.data.ans) {
+        return api.sendMessage(`✅ শেখা সম্পন্ন:\n❓ ${res.data.data.ask}\n💬 ${res.data.data.ans}`, threadID, messageID);
+      } else {
+        return api.sendMessage("❌ শেখাতে ব্যর্থ! পরে আবার চেষ্টা করো।", threadID, messageID);
+      }
+    } catch (err) {
+      console.error("Teach API Error:", err.message);
+      return api.sendMessage("⚠️ Teach API তে সমস্যা হয়েছে!", threadID, messageID);
+    }
   }
 
-  // -------------------------
-  // DELETE SPECIFIC ANSWER
-  // -------------------------
-  if (args[0] === "teachdel") {
-    const text = input.replace("teachdel", "").trim();
-    const [key, value] = text.split("=").map(s => s.trim().toLowerCase());
-
-    if (!data[key]) {
-      return api.sendMessage("❌ এই teach নাই", threadID, messageID);
-    }
-
-    const index = data[key].indexOf(value);
-
-    if (index === -1) {
-      return api.sendMessage("❌ এই answer পাওয়া যায় নাই", threadID, messageID);
-    }
-
-    data[key].splice(index, 1);
-
-    if (data[key].length === 0) {
-      delete data[key];
-    }
-
-    save(data);
-
-    return api.sendMessage(`🗑️ Deleted: ${value}`, threadID, messageID);
-  }
-
-  // -------------------------
-  // LIST ALL TEACH
-  // -------------------------
-  if (args[0] === "teachlist") {
-    let msg = "📚 Teach List:\n\n";
-
-    for (let key in data) {
-      msg += `${key}:\n`;
-      data[key].forEach((v, i) => {
-        msg += `  ${i + 1}. ${v}\n`;
+  // Normal Chat
+  try {
+    const res = await axios.get(`${baseApiUrl}/sim?text=${encodeURIComponent(input)}`);
+    const reply = res.data.reply || "🤔 আমি ঠিক বুঝতে পারিনি, আবার বলো তো!";
+    return api.sendMessage(reply, threadID, (err, info) => {
+      if (!err) global.client.handleReply.push({
+        name: module.exports.config.name,
+        messageID: info.messageID,
+        author: senderID
       });
-      msg += `\n`;
-    }
-
-    return api.sendMessage(msg || "No data found", threadID, messageID);
+    }, messageID);
+  } catch (err) {
+    console.error("Chat API Error:", err.message);
+    return api.sendMessage("⚠️ উত্তর আনতে সমস্যা হয়েছে!", threadID, messageID);
   }
+};
 
-  // -------------------------
-  // NORMAL CHAT
-  // -------------------------
-  const key = input.toLowerCase();
+module.exports.handleReply = async ({ api, event, handleReply }) => {
+  const { threadID, messageID, senderID, body } = event;
+  if (handleReply.author !== senderID) return;
 
-  if (data[key]) {
-    const replies = data[key];
-    const reply = replies[Math.floor(Math.random() * replies.length)];
-
-    return api.sendMessage(reply, threadID, messageID);
+  try {
+    const res = await axios.get(`${baseApiUrl}/sim?text=${encodeURIComponent(body)}`);
+    const reply = res.data.reply || "🤔 আমি বুঝতে পারিনি, আরেকটু সহজ করে বলো।";
+    return api.sendMessage(reply, threadID, (err, info) => {
+      if (!err) global.client.handleReply.push({
+        name: module.exports.config.name,
+        messageID: info.messageID,
+        author: senderID
+      });
+    }, messageID);
+  } catch (err) {
+    console.error("Reply Error:", err.message);
+    return api.sendMessage("⚠️ উত্তর আনতে সমস্যা হয়েছে!", threadID, messageID);
   }
-
-  return api.sendMessage("🤖 কিছু শেখাও আগে!", threadID, messageID);
 };
