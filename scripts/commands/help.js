@@ -114,7 +114,7 @@ module.exports.run = async function ({ api, event, args, getText }) {
   const visibleCategories = categories.slice(startIdx, endIdx);
 
   // Create ASCII art header
-  let msg = `\n🗡️ 𝗜 𝗠 𝗥 𝗔 𝗡   𝗖 𝗢 𝗠 𝗠 𝗔 𝗡 𝗗 𝗦 🗡️\n`;
+  let msg = `\n🗡️ 𝗔 𝗘 𝗧 𝗛 𝗘 𝗥  𝗖 𝗢 𝗠 𝗠 𝗔 𝗡 𝗗 𝗦 🗡️\n`;
   msg += `✧･ﾟ: *✧･ﾟ:* ༻ ༺ *:･ﾟ✧*:･ﾟ✧\n\n`;
 
   // Add categories with stylish formatting
