@@ -33,7 +33,7 @@ module.exports.run = async ({ api, event, args }) => {
   const uptime = formatUptime(uptimeSeconds);
 
   const info = `
-✦ 𝗬𝗨𝗠𝗜𝗞𝗔 𝗕𝗢𝗧 𝗔𝗗𝗠𝗜𝗡 𝗜𝗡𝗙𝗢 ✦
+✦ 𝗘𝗖𝗟𝗜𝗣𝗦𝗘 𝗕𝗢𝗧 𝗔𝗗𝗠𝗜𝗡 𝗜𝗡𝗙𝗢 ✦
 
 ❖ 𝗡𝗮𝗺𝗲: 『 ${adminInfo.name} 』
 ❖ 𝗟𝗼𝗰𝗮𝘁𝗶𝗼𝗻: 『 ${adminInfo.city} 』
