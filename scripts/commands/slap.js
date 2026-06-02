@@ -1,18 +1,22 @@
 const axios = require("axios");
 
+module.exports.config = {
+  name: "slap",
+  version: "1.0.0",
+  permission: 0,
+  credits: "you",
+  description: "slap command"
+};
+
 module.exports.run = async ({ api, event }) => {
   const { threadID, messageID, mentions, messageReply } = event;
 
   let targetID;
 
-  // MENTION
-  const mentionIDs = Object.keys(mentions);
+  const mentionIDs = Object.keys(mentions || {});
   if (mentionIDs.length > 0) {
     targetID = mentionIDs[0];
-  }
-
-  // REPLY
-  else if (messageReply) {
+  } else if (messageReply) {
     targetID = messageReply.senderID;
   }
 
@@ -29,9 +33,13 @@ module.exports.run = async ({ api, event }) => {
 
     const image = res.data.url;
 
+    const stream = await axios.get(image, {
+      responseType: "stream"
+    });
+
     return api.sendMessage({
       body: `🤜 slap করা হলো!`,
-      attachment: await global.utils.getStreamFromURL(image)
+      attachment: stream.data
     }, threadID, messageID);
 
   } catch (e) {
