@@ -5,10 +5,11 @@ module.exports.config = {
   version: "1.0.0",
   permission: 0,
   credits: "you",
-  description: "slap command"
+  description: "slap command",
+  prefix: true
 };
 
-module.exports.run = async ({ api, event }) => {
+module.exports.run = async function ({ api, event }) {
   const { threadID, messageID, mentions, messageReply } = event;
 
   let targetID;
@@ -30,7 +31,6 @@ module.exports.run = async ({ api, event }) => {
 
   try {
     const res = await axios.get("https://api.waifu.pics/sfw/slap");
-
     const image = res.data.url;
 
     const stream = await axios.get(image, {
