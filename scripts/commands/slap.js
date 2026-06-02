@@ -1,48 +1,77 @@
 const axios = require("axios");
 
-module.exports.config = {
-  name: "slap",
-  version: "1.0.0",
-  permission: 0,
-  credits: "you",
-  description: "slap command",
-  prefix: true
-};
+module.exports = {
+	config: {
+		name: "slap",
+		version: "1.0",
+		author: "Aether",
+		countDown: 5,
+		role: 0,
+		shortDescription: {
+			en: "Slap someone"
+		},
+		longDescription: {
+			en: "Anime slap GIF"
+		},
+		category: "fun",
+		guide: {
+			en: "{pn} @mention/reply"
+		}
+	},
 
-module.exports.run = async function ({ api, event }) {
-  const { threadID, messageID, mentions, messageReply } = event;
+	onStart: async function ({ api, event }) {
+		const { threadID, messageID, mentions, messageReply } = event;
 
-  let targetID;
+		let targetID;
+		let targetName = "Someone";
 
-  const mentionIDs = Object.keys(mentions || {});
-  if (mentionIDs.length > 0) {
-    targetID = mentionIDs[0];
-  } else if (messageReply) {
-    targetID = messageReply.senderID;
-  }
+		const mentionIDs = Object.keys(mentions || {});
 
-  if (!targetID) {
-    return api.sendMessage(
-      "❌ কাউকে mention বা reply করো 😏",
-      threadID,
-      messageID
-    );
-  }
+		if (mentionIDs.length > 0) {
+			targetID = mentionIDs[0];
+			targetName = mentions[targetID].replace("@", "");
+		}
+		else if (messageReply) {
+			targetID = messageReply.senderID;
+			targetName = "এই ব্যক্তি";
+		}
 
-  try {
-    const res = await axios.get("https://api.waifu.pics/sfw/slap");
-    const image = res.data.url;
+		if (!targetID) {
+			return api.sendMessage(
+				"❌ | কাউকে mention বা reply করো 😏",
+				threadID,
+				messageID
+			);
+		}
 
-    const stream = await axios.get(image, {
-      responseType: "stream"
-    });
+		try {
+			const res = await axios.get(
+				"https://api.waifu.pics/sfw/slap"
+			);
 
-    return api.sendMessage({
-      body: `🤜 slap করা হলো!`,
-      attachment: stream.data
-    }, threadID, messageID);
+			const imageUrl = res.data.url;
 
-  } catch (e) {
-    return api.sendMessage("❌ API error", threadID, messageID);
-  }
+			const img = await axios.get(imageUrl, {
+				responseType: "stream"
+			});
+
+			api.sendMessage(
+				{
+					body: `🤜 | ${targetName} কে জোরে একটা slap মারা হলো!`,
+					attachment: img.data
+				},
+				threadID,
+				messageID
+			);
+
+		} catch (err) {
+			console.error(err);
+
+			api.sendMessage(
+				"❌ | Slap API থেকে ছবি আনা যায়নি!",
+				threadID,
+				messageID
+			);
+		}
+	}
 };
